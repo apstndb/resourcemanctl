@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"strings"
 
 	"google.golang.org/api/cloudresourcemanager/v2"
 )
@@ -38,4 +39,24 @@ func listDescendantFoldersImpl(ctx context.Context, folderSvc *cloudresourcemana
 		return nil, err
 	}
 	return folders, nil
+}
+
+func formatAncestors(parent string, folders map[string]*cloudresourcemanager.Folder) string {
+	return formatFolderPath(getAncestors(folders, parent))
+}
+
+func formatFolderPath(path []*cloudresourcemanager.Folder) string {
+	var displayNames []string
+	for _, folder := range path {
+		displayNames = append(displayNames, folder.DisplayName)
+	}
+	return "/" + strings.Join(displayNames, "/")
+}
+
+func getAncestors(folders map[string]*cloudresourcemanager.Folder, parent string) []*cloudresourcemanager.Folder {
+	var ancestors []*cloudresourcemanager.Folder
+	for parentFolder, ok := folders[parent]; ok; parentFolder, ok = folders[parentFolder.Parent] {
+		ancestors = append([]*cloudresourcemanager.Folder{parentFolder}, ancestors...)
+	}
+	return ancestors
 }

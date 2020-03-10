@@ -10,6 +10,7 @@ import (
 	"github.com/cheggaaa/pb/v3"
 	"google.golang.org/api/cloudbilling/v1"
 	cloudresourcemanagerv1 "google.golang.org/api/cloudresourcemanager/v1"
+	"google.golang.org/api/cloudresourcemanager/v2"
 )
 
 var organization = flag.String("organization", "", "organization ID")
@@ -36,8 +37,10 @@ func _main() error {
 		return err
 	}
 
+	folderMap := make(map[string]*cloudresourcemanager.Folder)
 	var parentNames = []string{organizationName}
 	for _, folder := range folders {
+		folderMap[folder.Name] = folder
 		parentNames = append(parentNames, folder.Name)
 	}
 
@@ -53,16 +56,15 @@ func _main() error {
 	defer file.Close()
 
 	bar := pb.StartNew(len(projects))
+	fmt.Fprintf(file, "%v,%v,%v\n", "project_id", "billing_account_id", "display_name_path")
 	err = forEachProjectBillingInfo(ctx, projects,
 		func(project *cloudresourcemanagerv1.Project, billingInfo *cloudbilling.ProjectBillingInfo) {
 			bar.Increment()
-			fmt.Fprintf(file, "%v,%v,%v\n", project.ProjectId, formatParent(project.Parent), billingInfo.BillingAccountName)
+			fmt.Fprintf(file, "%v,%v,%v\n", project.ProjectId, billingInfo.BillingAccountName, formatAncestors(formatParent(project.Parent), folderMap))
 		})
-	bar.Finish()
 	if err != nil {
 		return err
 	}
+	bar.Finish()
 	return nil
 }
-
-

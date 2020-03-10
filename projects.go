@@ -73,6 +73,7 @@ func forEachProjectBillingInfo(ctx context.Context, projects []*cloudresourceman
 	if err != nil {
 		return err
 	}
+
 	billingSvc := cloudbilling.NewProjectsService(svc)
 	for _, project := range projects {
 		billingInfo, err := getBillingInfo(billingSvc, project)
@@ -83,5 +84,3 @@ func forEachProjectBillingInfo(ctx context.Context, projects []*cloudresourceman
 	}
 	return nil
 }
-
-
