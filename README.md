@@ -1,4 +1,5 @@
-List projects in organization with billing account and folder path
+List projects in organization with billing account and folder path.
+It takes long time because projects.getBillingInfo is called for each projects sequentially.
 
 ## Example output
 
